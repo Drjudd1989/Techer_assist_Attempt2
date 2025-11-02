@@ -40,11 +40,16 @@ This project is organized as a monorepo with the following top-level directories
     ```bash
     cd services/ai_generation_service
     ```
-2.  Install the Python dependencies:
+2.  Create and activate the Python virtual environment:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate
+    ```
+3.  Install the Python dependencies into the virtual environment:
     ```bash
     pip install -r requirements.txt
     ```
-3.  Run the FastAPI application using uvicorn:
+4.  Run the FastAPI application using uvicorn:
     ```bash
     uvicorn main:app --reload
     ```

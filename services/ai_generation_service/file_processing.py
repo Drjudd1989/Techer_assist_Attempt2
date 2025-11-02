@@ -2,7 +2,7 @@ import hashlib
 import docx
 from pypdf import PdfReader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 
 HASHES_FILE = "file_hashes.log"
