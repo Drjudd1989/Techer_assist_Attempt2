@@ -48,5 +48,4 @@ This project is organized as a monorepo with the following top-level directories
     ```bash
     uvicorn main:app --reload
     ```
-    python -m uvicorn main:app --reload
     The API will be available at `http://localhost:8000`.

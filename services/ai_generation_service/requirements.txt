@@ -3,3 +3,8 @@ uvicorn
 google-generativeai
 python-dotenv
 python-multipart
+chromadb
+pypdf
+python-docx
+langchain
+langchain-google-genai

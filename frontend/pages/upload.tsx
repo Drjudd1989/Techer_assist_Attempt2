@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 const UploadPage: NextPage = () => {
   const [files, setFiles] = useState<FileList | null>(null);
   const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(e.target.files);
@@ -28,6 +29,8 @@ const UploadPage: NextPage = () => {
       return;
     }
 
+    setLoading(true);
+    setMessage('');
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
@@ -39,14 +42,13 @@ const UploadPage: NextPage = () => {
         body: formData,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setMessage(data.message);
-      } else {
-        setMessage('Error uploading files.');
-      }
+      const data = await response.json();
+      setMessage(data.message);
+
     } catch (error) {
       setMessage('An error occurred while uploading.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,7 +74,9 @@ const UploadPage: NextPage = () => {
 
         <div>
           <input type="file" multiple onChange={handleFileChange} />
-          <button onClick={handleUpload}>Upload Files</button>
+          <button onClick={handleUpload} disabled={loading}>
+            {loading ? 'Uploading...' : 'Upload Files'}
+          </button>
         </div>
         {message && <p>{message}</p>}
       </main>

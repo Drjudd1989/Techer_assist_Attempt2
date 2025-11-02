@@ -5,10 +5,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import google.generativeai as genai
 from dotenv import load_dotenv
+from file_processing import (
+    calculate_hash,
+    load_hashes,
+    save_hash,
+    get_text_from_pdf,
+    get_text_from_docx,
+    get_text_chunks,
+    get_vector_embeddings
+)
+from vector_db import add_vectors_to_db
 
 load_dotenv()
 
 app = FastAPI()
+
+# Load existing file hashes on startup
+uploaded_file_hashes = load_hashes()
 
 # Configure CORS
 origins = [
@@ -33,19 +46,53 @@ def read_root():
 @app.post("/uploadfiles/")
 async def create_upload_files(files: List[UploadFile] = File(...)):
     """
-    Endpoint to upload multiple curriculum files.
+    Endpoint to upload multiple curriculum files, checking for duplicates,
+    processing them, and storing their vector embeddings in the database.
     """
     saved_files = []
+    skipped_files = []
+    processed_files = []
     upload_dir = "uploads"
     os.makedirs(upload_dir, exist_ok=True)
 
     for file in files:
+        file_content = await file.read()
+        file_hash = calculate_hash(file_content)
+
+        if file_hash in uploaded_file_hashes:
+            skipped_files.append(file.filename)
+            continue
+
         file_path = os.path.join(upload_dir, file.filename)
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
+
+        uploaded_file_hashes.add(file_hash)
+        save_hash(file_hash)
         saved_files.append(file.filename)
 
-    return {"message": f"Successfully uploaded {len(saved_files)} files: {', '.join(saved_files)}"}
+        # Process the file content for embeddings
+        text = ""
+        if file.filename.endswith(".pdf"):
+            text = get_text_from_pdf(file_path)
+        elif file.filename.endswith(".docx"):
+            text = get_text_from_docx(file_path)
+
+        if text:
+            text_chunks = get_text_chunks(text)
+            if text_chunks:
+                vector_embeddings = get_vector_embeddings(text_chunks)
+                add_vectors_to_db(text_chunks, vector_embeddings, file.filename)
+                processed_files.append(file.filename)
+
+
+    message = ""
+    if processed_files:
+        message += f"Successfully uploaded and processed {len(processed_files)} files: {', '.join(processed_files)}. "
+    if skipped_files:
+        message += f"Skipped {len(skipped_files)} duplicate files: {', '.join(skipped_files)}."
+
+    return {"message": message or "No new files to upload."}
 
 
 @app.get("/generate")
