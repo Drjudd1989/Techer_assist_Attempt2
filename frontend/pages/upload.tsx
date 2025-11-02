@@ -61,12 +61,12 @@ const UploadPage: NextPage = () => {
       <main className={styles.main}>
         <div className={styles.intro}>
           <h1>
-            Upload Your Curriculum
+            Upload Your Materials
           </h1>
 
           <p>
-            Select multiple curriculum files to upload (.pdf, .docx, .txt).
-            The AI will use these documents as a knowledge base to generate lesson plans and activities.
+            Select your curriculum documents, existing lesson plans, or other reference materials to upload (.pdf, .docx, .txt).
+            The AI will use these as a knowledge base to generate new content.
           </p>
         </div>
 
