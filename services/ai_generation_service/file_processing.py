@@ -1,7 +1,6 @@
 import hashlib
 import docx
 from pypdf import PdfReader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 
@@ -47,9 +46,3 @@ def get_text_chunks(text: str) -> list:
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     chunks = text_splitter.split_text(text)
     return chunks
-
-def get_vector_embeddings(chunks: list) -> list:
-    """Generates vector embeddings for a list of text chunks."""
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    embedded_texts = embeddings.embed_documents(chunks)
-    return embedded_texts

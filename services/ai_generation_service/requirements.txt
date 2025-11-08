@@ -9,3 +9,4 @@ python-docx
 langchain
 langchain-google-genai
 langchain-text-splitters
+langchain-chroma

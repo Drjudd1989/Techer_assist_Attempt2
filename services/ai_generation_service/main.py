@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import google.generativeai as genai
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from starlette.responses import StreamingResponse
 from file_processing import (
     calculate_hash,
     load_hashes,
@@ -12,11 +14,18 @@ from file_processing import (
     get_text_from_pdf,
     get_text_from_docx,
     get_text_chunks,
-    get_vector_embeddings
 )
 from vector_db import add_vectors_to_db
+from rag_chain import get_rag_chain
 
 load_dotenv()
+
+# Configure the Gemini API key at the application level
+try:
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+except AttributeError:
+    print("Missing GOOGLE_API_KEY environment variable.")
+
 
 app = FastAPI()
 
@@ -36,8 +45,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure the Gemini API key
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# -- Models --
+class ChatRequest(BaseModel):
+    message: str
+
+# -- RAG Chain --
+rag_chain = get_rag_chain()
+
 
 @app.get("/")
 def read_root():
@@ -81,8 +96,7 @@ async def create_upload_files(files: List[UploadFile] = File(...)):
         if text:
             text_chunks = get_text_chunks(text)
             if text_chunks:
-                vector_embeddings = get_vector_embeddings(text_chunks)
-                add_vectors_to_db(text_chunks, vector_embeddings, file.filename)
+                add_vectors_to_db(text_chunks, file.filename)
                 processed_files.append(file.filename)
 
 
@@ -93,6 +107,18 @@ async def create_upload_files(files: List[UploadFile] = File(...)):
         message += f"Skipped {len(skipped_files)} duplicate files: {', '.join(skipped_files)}."
 
     return {"message": message or "No new files to upload."}
+
+
+@app.post("/chat")
+async def chat(chat_request: ChatRequest):
+    """
+    Endpoint to handle chat requests using the RAG chain.
+    """
+    async def stream_response():
+        async for chunk in rag_chain.astream(chat_request.message):
+            yield chunk
+
+    return StreamingResponse(stream_response(), media_type="text/event-stream")
 
 
 @app.get("/generate")

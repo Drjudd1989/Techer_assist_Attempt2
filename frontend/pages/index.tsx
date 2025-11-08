@@ -32,8 +32,12 @@ export default function Home() {
 
           <div className={styles.grid}>
             <a href="/upload" className={styles.card}>
-              <h2>Upload Curriculum &rarr;</h2>
-              <p>Upload your curriculum documents to the AI.</p>
+              <h2>Upload Materials &rarr;</h2>
+              <p>Upload your curriculum, lesson plans, and reference documents.</p>
+            </a>
+            <a href="/chat" className={styles.card}>
+              <h2>Start Chatting &rarr;</h2>
+              <p>Interact with the AI assistant to generate lesson plans and activities.</p>
             </a>
           </div>
         </main>
